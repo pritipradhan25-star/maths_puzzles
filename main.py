@@ -5,6 +5,7 @@ import asyncio
 pygame.init()
 screen = pygame.display.set_mode((1200, 800))
 pygame.display.set_caption("Math Riddle Game")
+pygame.key.start_text_input()
 
 font = pygame.font.SysFont("arial", 28)
 num_font = pygame.font.SysFont("arial", 34, bold=True)
@@ -173,7 +174,12 @@ async def main():
             if event.type == pygame.QUIT:
                 running = False
 
-            if event.type == pygame.KEYDOWN and not game_over:
+            elif not game_over and event.type == pygame.TEXTINPUT:
+                digits = "".join(ch for ch in event.text if ch.isdigit())
+                user_text = (user_text + digits)[:6]
+
+            elif not game_over and event.type == pygame.KEYDOWN:
+
                 if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                     if user_text == levels[current_level]["answer"]:
                         score += 10
@@ -189,10 +195,6 @@ async def main():
 
                 elif event.key == pygame.K_BACKSPACE:
                     user_text = user_text[:-1]
-
-                elif event.unicode.isdigit() and len(user_text) < 6:
-                    user_text += event.unicode
-
         screen.fill(BG)
 
         if not game_over:
