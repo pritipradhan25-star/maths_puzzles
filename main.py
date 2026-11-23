@@ -1,5 +1,6 @@
 import math
 import pygame
+import asyncio
 
 pygame.init()
 screen = pygame.display.set_mode((1200, 800))
@@ -158,47 +159,66 @@ def draw_puzzle(level):
         draw_circle(level["numbers"])
 
 
+
 # ---------------- MAIN LOOP ----------------
-running = True
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
 
-        if event.type == pygame.KEYDOWN and not game_over:
-            if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                if user_text == levels[current_level]["answer"]:
-                    score += 10
-                    current_level += 1
-                    # message = "Sahi! Agle level pe chalo."
-                    # message_color = GREEN
-                    if current_level == len(levels):
-                        game_over = True
-                else:
-                    message = "Galat! Phir se try karo."
-                    message_color = RED
-                user_text = ""
-            elif event.key == pygame.K_BACKSPACE:
-                user_text = user_text[:-1]
-            elif event.unicode.isdigit() and len(user_text) < 6:
-                user_text += event.unicode
+async def main():
+    global current_level, score, user_text
+    global message, message_color, game_over
 
-    screen.fill(BG)
+    running = True
 
-    if not game_over:
-        draw_center_text(f"Level: {current_level + 1} / {len(levels)}   |   Score: {score}", level_font, GOLD, 45)
-        draw_puzzle(levels[current_level])
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
 
-        answer_rect = pygame.Rect(0, 0, 500, 70)
-        answer_rect.center = (CX, 650)
-        pygame.draw.rect(screen, WHITE, answer_rect, 3)
-        draw_center_text("Answer: " + user_text, answer_font, WHITE, 650)
-        draw_center_text(message, font, message_color, 725)
-    else:
-        draw_center_text("Badhai ho! Sab levels jeet liye!", big_font, GREEN, 300)
-        draw_center_text(f"Final Score: {score}", big_font, GOLD, 380)
+            if event.type == pygame.KEYDOWN and not game_over:
+                if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+                    if user_text == levels[current_level]["answer"]:
+                        score += 10
+                        current_level += 1
 
-    pygame.display.flip()
-    clock.tick(30)
+                        if current_level == len(levels):
+                            game_over = True
+                    else:
+                        message = "Wrong! Try again."
+                        message_color = RED
 
-pygame.quit()
+                    user_text = ""
+
+                elif event.key == pygame.K_BACKSPACE:
+                    user_text = user_text[:-1]
+
+                elif event.unicode.isdigit() and len(user_text) < 6:
+                    user_text += event.unicode
+
+        screen.fill(BG)
+
+        if not game_over:
+            draw_center_text(
+                f"Level: {current_level + 1} / {len(levels)}   |   Score: {score}",
+                level_font, GOLD, 45
+            )
+
+            draw_puzzle(levels[current_level])
+
+            answer_rect = pygame.Rect(0, 0, 500, 70)
+            answer_rect.center = (CX, 650)
+            pygame.draw.rect(screen, WHITE, answer_rect, 3)
+
+            draw_center_text("Answer: " + user_text, answer_font, WHITE, 650)
+            draw_center_text(message, font, message_color, 725)
+
+        else:
+            draw_center_text("Congratulations! You won!", big_font, GREEN, 300)
+            draw_center_text(f"Final Score: {score}", big_font, GOLD, 380)
+
+        pygame.display.flip()
+
+        await asyncio.sleep(1 / 30)
+
+    pygame.quit()
+
+
+asyncio.run(main())
